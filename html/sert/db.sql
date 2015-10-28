@@ -1,4 +1,4 @@
-create database PKI IF NOT EXISTS ;
+create database PKI ;
 use PKI;
 create table user(
 	id int auto_increment,
@@ -25,6 +25,7 @@ create table demande(
 	len int(4) not null default 1024,
 	subj varchar(200) not null,
 	t varchar(10) not null,
+	d int(5) not null,
 	dtc timestamp default current_timestamp on update current_timestamp,
 	primary key(id),
 	foreign key(uid) references user(id)
