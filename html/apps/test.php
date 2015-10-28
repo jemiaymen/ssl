@@ -12,13 +12,16 @@ $u = array( 'email'=>'jemiaymen@gmail.com',
 			'tel' => '52547787'
  );
 
-/*if($user->register($u['email'],$u['pw'],$u['nom'],$u['adress'],$u['tel']))
-	echo "sa7it";*/
+//if($user->register($u['email'],$u['pw'],$u['nom'],$u['adress'],$u['tel']))
+
 
 /*if($user->login('jemiaymen@gmail.com','admin')) 
 	echo "login";
 else 
 	echo "mahouche login";*/
 
-$user->logout();
+//$user->logout();
+
+//$user->login('jemi@gmail.com','sdfpro');
+
 ?>

@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Please Login administrator"
+AuthUserFile /Library/WebServer/Documents/users/.htpasswd
+Require valid-user
