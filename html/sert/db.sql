@@ -47,6 +47,7 @@ create table rep(
 create table cert(
 	id int auto_increment,
 	rid int not null,
+	uid int not null,
 	admin varchar(30),
 	ca mediumblob not null,
 	pkey mediumblob not null,
@@ -63,7 +64,8 @@ create table cert(
 	subj varchar(200) not null,
 	dtc timestamp default current_timestamp on update current_timestamp,
 	primary key(id),
-	foreign key(rid) references rep(id)
+	foreign key(rid) references rep(id),
+	foreign key(uid) references user(id)
 );
 
 create table opp(
