@@ -8,7 +8,8 @@ if(isset($_POST['id']) && !empty($_POST['id']) && isset($_POST['comm']) && !empt
     $u->accept($_GET['accpt']);
 }
 
-$demande = $u->getDemandeNT();
+$demande = $u->getRepsA();
+
 
 ?>
 <!DOCTYPE html>
@@ -115,16 +116,19 @@ $demande = $u->getDemandeNT();
                                 if(empty($demande)){
                                     echo "<p> Pas de demande !</p>";
                                 }else {
-                                    echo "<div class='panel-body'><div class='table-responsive'><table class='table table-striped table-bordered table-hover'> <thead><tr><th>Hash Method</th><th>Key Lenth</th><th>Subject</th><th>Type</th><th>Days</th><th>Date de creation</th><th>Action</th></tr></thead><tbody>";
+                                    echo "<div class='panel-body'><div class='table-responsive'><table class='table table-striped table-bordered table-hover'> <thead><tr><th>Hash Method</th><th>Key Lenth</th><th>Subject</th><th>Type</th><th>Days</th><th>Administrateur</th><th>Date de creation</th><th>Date de reponce</th><th>Action</th></tr></thead><tbody>";
                                     foreach ($demande as $d) {
+                                        $u->GenCert($d[3],$d[2],$d[4]);
                                         echo "<tr>";
                                         echo "<td> $d[2]</td>";
                                         echo "<td> $d[3] </td>";
                                         echo "<td> $d[4] </td>";
                                         echo "<td> $d[5] </td>";
                                         echo "<td> $d[6] </td>";
+                                        echo "<td> $d[9] </td>";
                                         echo "<td> $d[7] </td>";
-                                        echo "<td> <a href='?accpt=$d[0]'><i class='fa fa-check-square-o'></i></a> | <a href='?rem=$d[0]#' id='ref' ><i class='fa fa-times'></i></a> </td>";
+                                        echo "<td> $d[8] </td>";
+                                        echo "<td> <a href='?r=$d[0]&uid=$d[1]'><i class='fa fa-check-square-o'></i></a> </td>";
                                         echo "</tr>";
                                     }
                                     echo "</tbody></table></div></div>";

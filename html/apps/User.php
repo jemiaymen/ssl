@@ -183,8 +183,52 @@ class user {
 		}
 	}
 
-	function SaveCert($key,$crt,$csr,$uid,$admin,$new=1){
-		$qry = "INSERT INTO certification() values(NULL,'$uid','$admin','$new','$key','$csr','$crt',NULL)";
+
+	function getRepsA(){
+		$qry = "SELECT rep.id,uid,hash,len,subj,t,d,demande.dtc,rep.dtc,admin FROM demande,rep WHERE demande.id = did AND repn = 1 LIMIT 30";
+		if($re = $this->db->query($qry)){
+			$i = 0;
+			$r = array();
+			while ($result = $re->fetch_array()) { 
+				$r[$i] = $result;
+				$i += 1;
+			}
+			return $r;
+		}
+		return null;
+	}
+
+	function GenCert($len,$subj,$hash,$days = 365){
+		exec("openssl genrsa -des3 -passout pass:x -out server.pass.key $len");
+		exec("openssl rsa -passin pass:x -in server.pass.key -out priv.key");
+		exec("openssl req -new -$hash -key priv.key -out ca.csr -subj '$subj'");
+		exec("openssl x509 -req -days $days -in ca.csr -signkey priv.key -out ca.crt");
+		unlink("server.pass.key");
+	}
+
+
+
+	//db  taw nriguelha fil dar bel mac
+	//dtcr date de creation certifica dtexp date d'expiration
+	function SaveCert($rid,$uid,$admin,$hash,$len,$subj){
+
+		/*$data = openssl_x509_parse(file_get_contents('/path/to/cert.crt'));
+
+$validFrom = date('Y-m-d H:i:s', $data['validFrom_time_t']);
+$validTo ) date('Y-m-d H:i:s', $data['validTo_time_t']);*/
+
+		$rid = addslashes($rid);
+		$uid = addslashes($uid);
+		$admin = addslashes($admin);
+		$hash = addslashes($hash);
+		$len = addslashes($len);
+		$subj = addslashes($subj);
+		$ca = file_get_contents("ca.crt");
+		$pkey = file_get_contents("priv.key");
+		$csr = file_get_contents("ca.csr");
+		exec("touch index.txt");
+		$db = file_get_contents("index.txt");
+		$qry = "INSERT INTO cert(id,rid,uid,admin,ca,pkey,csr,db,dtcr,dtexp,hash,len,subj) values(NULL,'$rid','$uid','$admin','$ca','$pkey','$csr','$db','$dtcr','$dtexp','$hash','$len','$subj')";
 
 		if($this->db->query($qry))
 			return true;
