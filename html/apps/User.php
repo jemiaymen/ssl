@@ -199,9 +199,12 @@ class user {
 	}
 
 	function GenCert($len,$subj,$hash,$days = 365){
+		exec("touch index.txt");
+		exec("echo 0 > serial");
+		exec("echo 0 > crlnumber");
 		exec("openssl genrsa -des3 -passout pass:x -out server.pass.key $len");
 		exec("openssl rsa -passin pass:x -in server.pass.key -out priv.key");
-		exec("openssl req -new -$hash -key priv.key -out ca.csr -subj '$subj'");
+		exec("openssl req -new -config openssl.cnf -$hash -key priv.key -out ca.csr -subj \"$subj\"");
 		exec("openssl x509 -req -days $days -in ca.csr -signkey priv.key -out ca.crt");
 		unlink("server.pass.key");
 	}
@@ -226,7 +229,7 @@ $validTo ) date('Y-m-d H:i:s', $data['validTo_time_t']);*/
 		$ca = file_get_contents("ca.crt");
 		$pkey = file_get_contents("priv.key");
 		$csr = file_get_contents("ca.csr");
-		exec("touch index.txt");
+		
 		$db = file_get_contents("index.txt");
 		$qry = "INSERT INTO cert(id,rid,uid,admin,ca,pkey,csr,db,dtcr,dtexp,hash,len,subj) values(NULL,'$rid','$uid','$admin','$ca','$pkey','$csr','$db','$dtcr','$dtexp','$hash','$len','$subj')";
 
