@@ -2,13 +2,13 @@
 require_once "../apps/User.php";
 $u = new user();
 
-if(isset($_GET['r']) && !empty($_GET['r']) && isset($_GET['uid']) && !empty($_GET['uid'])){
-    $d = $u->getDem($_GET['r']);
-    $u->GenCert($d[0],$d[1],$d[2],$d[3]);
-    $u->SaveCert($_GET['r'],$_GET['uid']);
+if(isset($_POST['id']) && !empty($_POST['id']) && isset($_POST['comm']) && !empty($_POST['comm'])){
+    $u->refuser($_POST['id'],$_POST['comm']);
+}elseif(isset($_GET['accpt']) && !empty($_GET['accpt'])){
+    $u->accept($_GET['accpt']);
 }
 
-$demande = $u->getRepsA();
+$demande = $u->getDemOppNT();
 
 ?>
 <!DOCTYPE html>
@@ -104,18 +104,17 @@ $demande = $u->getRepsA();
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12">
-                        <h1 class="page-header">Demandes Non Traiter</h1>
+                        <h1 class="page-header">Demandes d'Operation Non Traiter</h1>
 
                         <div class="panel panel-default">
                             <div class="panel-heading">
                                 Demandes
                             </div>
-
                             <?php 
                                 if(empty($demande)){
                                     echo "<p> Pas de demande !</p>";
                                 }else {
-                                    echo "<div class='panel-body'><div class='table-responsive'><table class='table table-striped table-bordered table-hover'> <thead><tr><th>Hash Method</th><th>Key Lenth</th><th>Subject</th><th>Type</th><th>Days</th><th>Administrateur</th><th>Date de creation</th><th>Date de reponce</th><th>Action</th></tr></thead><tbody>";
+                                    echo "<div class='panel-body'><div class='table-responsive'><table class='table table-striped table-bordered table-hover'> <thead><tr><th>Nature</th><th>Etat Certifica</th><th>Admin</th><th>Common Name</th><th>Date de Creation Demande</th><th>Date de creation Certifica</th><th>Date d'expiration Certifica</th><th>Action</th></tr></thead><tbody>";
                                     foreach ($demande as $d) {
                                         echo "<tr>";
                                         echo "<td> $d[2]</td>";
@@ -123,10 +122,9 @@ $demande = $u->getRepsA();
                                         echo "<td> $d[4] </td>";
                                         echo "<td> $d[5] </td>";
                                         echo "<td> $d[6] </td>";
-                                        echo "<td> $d[9] </td>";
                                         echo "<td> $d[7] </td>";
                                         echo "<td> $d[8] </td>";
-                                        echo "<td> <a href='?r=$d[0]&uid=$d[1]#' ><i class='fa fa-check-square-o'></i></a> </td>";
+                                        echo "<td> <a href='?renew=$d[0]&cid=$d[1]' title='RENEW'><i class='fa fa-repeat'></i></a> | <a href='?rev=$d[0]&cid=$d[1]'  title='REVOKE'><i class='fa fa-power-off'></i></a> </td>";
                                         echo "</tr>";
                                     }
                                     echo "</tbody></table></div></div>";
@@ -136,7 +134,7 @@ $demande = $u->getRepsA();
                         </div>
                         <!-- /.panel -->
                     </div>
-                    
+
                 </div>
                 <!-- /.row -->
             </div>
@@ -158,6 +156,7 @@ $demande = $u->getRepsA();
 
     <!-- Custom Theme JavaScript -->
     <script src="../dist/js/sb-admin-2.js"></script>
+
 
 </body>
 

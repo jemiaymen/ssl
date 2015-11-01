@@ -2,7 +2,7 @@
 
 define("HOST","127.0.0.1");
 define("USER","root");
-define("PW","");
+define("PW","sdfpro");
 define("DB","pki");
 
 class user {
@@ -108,7 +108,7 @@ class user {
 
 
 	function demande($hash,$len,$subj,$t,$d){
-		$id = addslashes($_COOKIE['uid']);;
+		$id = addslashes($_COOKIE['uid']);
 		$hash = addslashes($hash);
 		$len = addslashes($len);
 		$subj = addslashes($subj);
@@ -128,7 +128,7 @@ class user {
 
 	function getDemandeNT(){
 
-		$qry = "SELECT demande.id,uid,hash,len,subj,t,d,demande.dtc FROM demande,rep WHERE demande.id not in (select did from rep) LIMIT 30";
+		$qry = "SELECT demande.id,uid,hash,len,subj,t,d,demande.dtc FROM demande,rep WHERE demande.id not in (select did from rep) group by demande.id LIMIT 30";
 		if($re = $this->db->query($qry)){
 			$i = 0;
 			$r = array();
@@ -185,7 +185,7 @@ class user {
 
 
 	function getRepsA(){
-		$qry = "SELECT rep.id,uid,hash,len,subj,t,d,demande.dtc,rep.dtc,admin FROM demande,rep WHERE demande.id = did AND repn = 1 LIMIT 30";
+		$qry = "SELECT rep.id, demande.uid, demande.hash, demande.len, demande.subj, demande.t, demande.d, demande.dtc, rep.dtc, rep.admin FROM demande,rep,cert WHERE demande.id = did AND repn = 1 AND rep.id NOT IN (select rid from cert) GROUP BY rep.id  LIMIT 30";
 		if($re = $this->db->query($qry)){
 			$i = 0;
 			$r = array();
@@ -198,28 +198,122 @@ class user {
 		return null;
 	}
 
-	function GenCert($len,$subj,$hash,$days = 365){
+	//select cert.id, admin, dtcr, dtexp, hash, len, ops, subj, cert.dtc,  ca, pkey from user,cert where user.id = uid;
+
+	function getUserCertif(){
+		$id = addslashes($_COOKIE['uid']);
+
+		$qry = "select cert.id, admin, dtcr, dtexp, hash, len, ops, subj, cert.dtc,  ca, pkey from user,cert where user.id = uid";
+
+		if($re = $this->db->query($qry)){
+			$i = 0;
+			$r = array();
+			while ($result = $re->fetch_array()) { 
+				$r[$i] = $result;
+				$i += 1;
+			}
+			return $r;
+		}
+		return null;
+
+	}
+
+	function getCA($id){
+		$id = addslashes($id);
+
+		$qry = "SELECT ca FROM cert WHERE id ='$id'";
+
+		if($re = $this->db->query($qry)){
+			if ($result = $re->fetch_array()) { 
+				return $result[0];
+			}
+		}
+	}
+
+	function getPK($id){
+		$id = addslashes($id);
+
+		$qry = "SELECT pkey FROM cert WHERE id ='$id'";
+
+		if($re = $this->db->query($qry)){
+			if ($result = $re->fetch_array()) { 
+				return $result[0];
+			}
+		}
+	}
+
+	function getDemGen($rid){
+		$rid = addslashes($rid);
+		$qry = "SELECT hash,len,subj FROM demande,rep WHERE rep.id = '$rid' AND did = demande.id group by rep.id ";
+		if($re = $this->db->query($qry)){
+			if ($result = $re->fetch_array()) { 
+				return $result;
+			}
+		}
+		return null;
+	}
+
+	function getDem($rid){
+		$rid = addslashes($rid);
+		$qry = "SELECT len,hash,subj,d FROM demande,rep WHERE rep.id = '$rid' AND did = demande.id group by rep.id ";
+		if($re = $this->db->query($qry)){
+			if ($result = $re->fetch_array()) { 
+				return $result;
+			}
+		}
+		return null;
+	}
+
+	function GenCert($len,$hash,$subj,$days = 365){
 		exec("touch index.txt");
 		exec("echo 0 > serial");
 		exec("echo 0 > crlnumber");
 		exec("openssl genrsa -des3 -passout pass:x -out server.pass.key $len");
 		exec("openssl rsa -passin pass:x -in server.pass.key -out priv.key");
-		exec("openssl req -new -config openssl.cnf -$hash -key priv.key -out ca.csr -subj \"$subj\"");
+		exec("openssl req -new -$hash -key priv.key -out ca.csr -subj '$subj'");
 		exec("openssl x509 -req -days $days -in ca.csr -signkey priv.key -out ca.crt");
 		unlink("server.pass.key");
 	}
 
+	function Clear(){
+		if (file_exists("index.txt")) {
+			unlink("index.txt");
+		}
+		if (file_exists("serial")) {
+			unlink("serial");
+		}
+		if (file_exists("crlnumber")) {
+			unlink("crlnumber");
+		}
+		if (file_exists("priv.key")) {
+			unlink("priv.key");
+		}
+		if (file_exists("ca.csr")) {
+			unlink("ca.csr");
+		}
+		if (file_exists("ca.crt")) {
+			unlink("ca.crt");
+		}
+		if (file_exists("nca.crt")) {
+			unlink("nca.crt");
+		}
+		if (file_exists("nca.csr")) {
+			unlink("nca.csr");
+		}
+		if (file_exists("nca.csr")) {
+			unlink("nca.csr");
+		}
+		if (file_exists("npkey.key")) {
+			unlink("npkey.key");
+		}
+	}
 
 
-	//db  taw nriguelha fil dar bel mac
-	//dtcr date de creation certifica dtexp date d'expiration
-	function SaveCert($rid,$uid,$admin,$hash,$len,$subj){
+	function SaveCert($rid,$uid){
 
-		/*$data = openssl_x509_parse(file_get_contents('/path/to/cert.crt'));
-
-$validFrom = date('Y-m-d H:i:s', $data['validFrom_time_t']);
-$validTo ) date('Y-m-d H:i:s', $data['validTo_time_t']);*/
-
+		$data = openssl_x509_parse(file_get_contents('ca.crt'));
+		$dtcr = $data['validFrom_time_t'];
+		$dtexp = $data['validTo_time_t'];
 		$rid = addslashes($rid);
 		$uid = addslashes($uid);
 		$admin = addslashes($admin);
@@ -229,9 +323,15 @@ $validTo ) date('Y-m-d H:i:s', $data['validTo_time_t']);*/
 		$ca = file_get_contents("ca.crt");
 		$pkey = file_get_contents("priv.key");
 		$csr = file_get_contents("ca.csr");
-		
 		$db = file_get_contents("index.txt");
-		$qry = "INSERT INTO cert(id,rid,uid,admin,ca,pkey,csr,db,dtcr,dtexp,hash,len,subj) values(NULL,'$rid','$uid','$admin','$ca','$pkey','$csr','$db','$dtcr','$dtexp','$hash','$len','$subj')";
+		$admin = $_SERVER['REMOTE_USER'];
+
+		$d = $this->getDemGen($rid);
+		$hash = $d[0];
+		$len = $d[1];
+		$subj = $d[2];
+
+		$qry = "INSERT INTO cert(id,rid,uid,admin,ca,pkey,csr,db,dtcr,dtexp,hash,len,subj) values(NULL,'$rid','$uid','$admin','$ca','$pkey','$csr','$db',FROM_UNIXTIME($dtcr),FROM_UNIXTIME($dtexp),'$hash','$len','$subj')";
 
 		if($this->db->query($qry))
 			return true;
@@ -242,14 +342,59 @@ $validTo ) date('Y-m-d H:i:s', $data['validTo_time_t']);*/
 		}
 	}
 
-	function getCertif($id){
-		$qry = "SELECT privkey,crt FROM certification WHERE id='$id' ";
-		if($re = $this->db->query($qry)){
-			if ($result = $re->fetch_array()) { 
-				return $result;
-			}
+	function demandeRenew($cid){
+		$cid = addslashes($cid);
+		$qry = "INSERT INTO demopp(cid) values('$cid') ";
+		$qryt = "UPDATE cert SET opn = 2 , ops ='DEMRENEW' WHERE id='$cid' ";
+		if($this->db->query($qry)){
+			$this->db->query($qryt);
+			return true;
+		} else {
+			echo $this->db->error;
+			return false;
+
 		}
 	}
+
+	function demandeRevok($cid){
+		$cid = addslashes($cid);
+
+		$qry = "INSERT INTO demopp(cid,ops,opn) values('$cid','REVOKE',2) ";
+		$qryt = "UPDATE cert SET opn = 3 , ops ='DEMREVOKE' WHERE id='$cid' ";
+		if($this->db->query($qry)){
+			$this->db->query($qryt);
+			return true;
+		} else {
+			echo $this->db->error;
+			return false;
+
+		}
+	}
+
+	function getDemOppNT(){
+
+		$qry = "select demopp.id, cert.id, demopp.ops, cert.ops, admin, cn, demopp.dtc, dtcr, dtexp from cert,demopp,user where cert.id = cid and user.id = uid and etatn = 1";
+
+		if($re = $this->db->query($qry)){
+			$i = 0;
+			$r = array();
+			while ($result = $re->fetch_array()) { 
+				$r[$i] = $result;
+				$i += 1;
+			}
+			return $r;
+		}
+		return null;
+	}
+
+	function Revoke(){
+
+	}
+
+	function Renew(){
+		
+	}
+
 }
 
 

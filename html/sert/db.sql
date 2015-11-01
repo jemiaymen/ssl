@@ -68,9 +68,24 @@ create table cert(
 	foreign key(uid) references user(id)
 );
 
-create table opp(
+
+create table demopp(
 	id int auto_increment,
 	cid int not null,
+	ops varchar(20) not null default 'RENEW',
+	opn int(1) not null default 1,
+	etats varchar(20) not null default 'NOTYET',
+	etatn int(1) not null default 1,
+	dtc timestamp default current_timestamp on update current_timestamp,
+	primary key(id),
+	foreign key(cid) references cert(id)
+
+);
+
+
+create table opp(
+	id int auto_increment,
+	opid int not null,
 	oldca mediumblob not null,
 	oldkey mediumblob not null,
 	ncsr mediumblob not null,
@@ -81,6 +96,6 @@ create table opp(
 	opps varchar(20) not null,
 	dtc timestamp default current_timestamp on update current_timestamp,
 	primary key(id),
-	foreign key(cid) references cert(id)
+	foreign key(opid) references demopp(id)
 );
 

@@ -149,8 +149,7 @@ $data = $u->getUser();
                                         
                                         <div class='form-group'>
                                         <label>Subject</label>
-                                            <textarea  class='form-control'  name='subj' required readonly><?php echo "/C=$data[1]/ST=$data[2]/L=$data[3]/O=$data[4]/OU=$data[5]/CN=$data[6]/emailAddress=$data[7]" ; ?>
-                                            </textarea>
+                                            <textarea  class='form-control'  name='subj' required readonly><?php echo "/C=$data[1]/ST=$data[2]/L=$data[3]/O=$data[4]/OU=$data[5]/CN=$data[6]/emailAddress=$data[7]" ; ?></textarea>
                                         </div>
                                         
 

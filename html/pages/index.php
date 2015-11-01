@@ -1,15 +1,39 @@
 <?php
 require_once "../apps/User.php";
 $u = new user();
-
-if(isset($_GET['r']) && !empty($_GET['r']) && isset($_GET['uid']) && !empty($_GET['uid'])){
-    $d = $u->getDem($_GET['r']);
-    $u->GenCert($d[0],$d[1],$d[2],$d[3]);
-    $u->SaveCert($_GET['r'],$_GET['uid']);
+if(!$u->isauth()){
+    header("Location: logout.php");
+}
+if (isset($_GET['ca']) && is_numeric($_GET['ca'])) {
+    $file = "../sert/ca.crt";
+    file_put_contents($file, $u->getCA($_GET['ca']));
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.basename($file).'"');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($file));
+    readfile($file);
+    unlink($file);
+}elseif (isset($_GET['k']) && is_numeric($_GET['k'])) {
+    $file = "../sert/Pkey.pem";
+    file_put_contents($file, $u->getPK($_GET['k']));
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.basename($file).'"');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($file));
+    readfile($file);
+    unlink($file);
+}elseif (isset($_GET['renew']) && is_numeric($_GET['renew'])){
+    $u->demandeRenew($_GET['renew']);
 }
 
-$demande = $u->getRepsA();
-
+$data = $u->getUser();
+$certs = $u->getUserCertif();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -104,29 +128,34 @@ $demande = $u->getRepsA();
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12">
-                        <h1 class="page-header">Demandes Non Traiter</h1>
+                        <h1 class="page-header">Mes Certification </h1>
 
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                Demandes
+                                <?php echo $data[5] ; ?>
                             </div>
 
                             <?php 
-                                if(empty($demande)){
-                                    echo "<p> Pas de demande !</p>";
+                                if(empty($certs)){
+                                    echo "Pas de Certification pour :" . $data[5] ;
                                 }else {
-                                    echo "<div class='panel-body'><div class='table-responsive'><table class='table table-striped table-bordered table-hover'> <thead><tr><th>Hash Method</th><th>Key Lenth</th><th>Subject</th><th>Type</th><th>Days</th><th>Administrateur</th><th>Date de creation</th><th>Date de reponce</th><th>Action</th></tr></thead><tbody>";
-                                    foreach ($demande as $d) {
+                                    echo "<div class='panel-body'><div class='table-responsive'><table class='table table-striped table-bordered table-hover'> <thead><tr><th>Admin</th><th>Date Creation</th><th>Date Expiration</th><th>Hash</th><th>Key</th><th>Etat</th><th>Download</th><th>Operation</th></tr></thead><tbody>";
+                                    foreach ($certs as $d) {
+                                        //cert.id, admin, dtcr, dtexp, hash, len, ops, subj, cert.dtc,  ca, pkey 
                                         echo "<tr>";
-                                        echo "<td> $d[2]</td>";
-                                        echo "<td> $d[3] </td>";
-                                        echo "<td> $d[4] </td>";
-                                        echo "<td> $d[5] </td>";
-                                        echo "<td> $d[6] </td>";
-                                        echo "<td> $d[9] </td>";
-                                        echo "<td> $d[7] </td>";
-                                        echo "<td> $d[8] </td>";
-                                        echo "<td> <a href='?r=$d[0]&uid=$d[1]#' ><i class='fa fa-check-square-o'></i></a> </td>";
+                                        echo "<td>" . $d[1] . "</td>";
+                                        echo "<td>" . $d[2] . "</td>";
+                                        echo "<td>" . $d[3] . "</td>";
+                                        echo "<td>" . $d[4] . "</td>";
+                                        echo "<td>" . $d[5] . "</td>";
+                                        echo "<td>" . $d[6] . "</td>";
+                                        echo "<td> <a href='?ca=$d[0]'>CA</a> | <a href='?k=$d[0]'>Pkey</a></td>";
+                                        if ($d[6] == 'NEW') {
+                                            echo "<td> <a href='?renew=$d[0]'>Renew</a> | <a href='?rev=$d[0]'>Revoke</a></td>";
+                                        }else{
+                                            echo "<td> Operation En cour </td>";
+                                        }
+                                        
                                         echo "</tr>";
                                     }
                                     echo "</tbody></table></div></div>";
@@ -136,7 +165,6 @@ $demande = $u->getRepsA();
                         </div>
                         <!-- /.panel -->
                     </div>
-                    
                 </div>
                 <!-- /.row -->
             </div>

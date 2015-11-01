@@ -1,4 +1,5 @@
 AuthType Basic
 AuthName "Please Login administrator"
-AuthUserFile c:/wamp/ssl/html/sert/.htpasswd
+#AuthUserFile c:/wamp/ssl/html/sert/.htpasswd
+AuthUserFile /Library/WebServer/Documents/users/.htpasswd
 Require valid-user
